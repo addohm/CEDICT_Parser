@@ -4,8 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 **.env**
-**/resources
-**/archives
+**/resources/*
+**/archives/*
 **/pytests
 **/.vscode
 
