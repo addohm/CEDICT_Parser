@@ -61,7 +61,7 @@ def read_file(file_name):
 
             items.append({"hanzi": han, "pinyin": pin, "def": defi})
 
-    write_file("CH_DIC.js", items)
+    write_file("dictionaries/CH_DIC.js", items)
 
 # https://www.mdbg.net/chinese/dictionary?page=cc-cedict
 
