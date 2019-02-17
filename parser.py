@@ -28,8 +28,8 @@ class Cedict(object):
         for item in self.dict_items:
             try:
                 new_file.write("\t\t")
-                new_file.write('"' + item["hanzi"] + '":')
-                new_file.write(' "' + item["pinyin"] + "|" + item["def"] + '",')
+                new_file.write('"' + item["simplified"] + '":')
+                new_file.write(' "' + item["pinyin"] + "|" + item["definition"] + '",')
                 new_file.write("\n")
             except:
                 print("Something went wrong")
@@ -42,13 +42,31 @@ class Cedict(object):
         new_file.close()
         return self.output_path
 
+    def write_django_fixture_yaml(self, model):
+        pk = 1
+        with open(self.output_path, "w") as f:
+            for item in self.dict_items:
+                f.write('- model: ' + model + '\n')
+                f.write('  pk: ' + str(pk) + '\n')
+                f.write('  fields:' + '\n')
+                for items in item:
+                    string = []
+                    string.append('    ' + str(items) + ': ')
+                    string.append(str(item.get(items, '')))
+                    string.append('\n')
+                    f.write(' '.join(string))
+                pk += 1
+        f.close()
+
+        return self.output_path
+
     def _json_write(self):
         with open(self.output_path, 'w', encoding='utf-8') as f:
             json.dump(self.dict_items, f, indent=2, ensure_ascii=False)
         f.close()
         return self.output_path
 
-    def write_django_fixture(self, model):
+    def write_django_fixture_json(self, model):
         new_dict = []
         pk = 1
 
@@ -63,7 +81,7 @@ class Cedict(object):
         self.dict_items = new_dict
         self._json_write()
 
-    def convert_cedict(self, file_type, output_filename, convert, char_type='utf-8'):
+    def convert_cedict(self, file_type, output_filename, convert, char_type='utf-8', model=None):
         # Dictionary Source: https://www.mdbg.net/chinese/dictionary?page=cc-cedict
         # EXAMPLE INPUT LINE:   㐖 㐖 [Ye4] /see
         # TRADITIONAL_HANZI SIMPLIFIED_HANZI [PINYIN] /TRANSLATION
@@ -95,7 +113,7 @@ class Cedict(object):
                         self.tones = TONES_UNICODE
                     pin = self.convert_char(pin)
 
-                self.dict_items.append({"traditional": trad, "simplified": simp, "pinyin": pin, "def": defi})
+                self.dict_items.append({"traditional": trad, "simplified": simp, "pinyin": pin, "definition": defi})
 
         self.output_path = self.output_directory + output_filename
 
@@ -103,12 +121,13 @@ class Cedict(object):
             self.write_js()
         if file_type == 'json':
             self.write_json()
-        if file_type == 'yaml':
-            pass
         if file_type == 'xml':
             pass
-        if file_type == 'django':
-            self.write_django_fixture('main.Phrases')
+        if model:
+            if file_type == 'yaml':
+                self.write_django_fixture_yaml(model)
+            if file_type == 'django':
+                self.write_django_fixture_json(model)
 
     def convert_char(self, s):
         # char codes ref from: http://www.math.nus.edu.sg/aslaksen/read.shtml
@@ -171,6 +190,7 @@ class Cedict(object):
             ret_string += tmp + " "
 
         return ret_string
+        
 
 TONES_UNICODE = {
     "1a": chr(257),
@@ -229,4 +249,7 @@ TONES_ASCII = {
 if __name__ == '__main__':
     from pprint import pprint
     c = Cedict()
-    c.convert_cedict('django', 'cedict.django', convert=True)
+    # c.convert_cedict('django', 'main.json', convert=True, model='main.Phrases')
+    # c.convert_cedict('yaml', 'main.yaml', convert=True, model='main.Phrases')
+    # c.convert_cedict('json', 'cedict.json', convert=False)
+    # c.convert_cedict('js', 'cedict.js', convert=False)
